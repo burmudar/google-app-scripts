@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2019",
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
+    "sourceMap": true,
+    "sourceRoot": "src",
+    "baseUrl": "./src",
+    "paths": {
+      "*": ["../node_modules/*", "types/*", "*"]
+    },
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "declaration": true,
+    "outDir": "dist/types",
+    "rootDir": "./src"
+  },
+  "include": ["**/*", "**/*.d.ts"],
+  "exclude": ["node_modules", "../node_modules", "dist", "**/*.test.ts", "scripts"]
+}
+

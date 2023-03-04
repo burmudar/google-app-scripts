@@ -1,9 +1,10 @@
 {
-  "name": "gscripts",
+  "name": "airbase-gscript",
   "private": true,
   "scripts": {
-    "build-airbase": "cd airbase && yarn build",
-    "dist-airbase": "cd airbase && yarn dist && cd - && mkdir -p dist && cp airbase/dist/* dist/"
+    "build": "ts-node --transpile-only ./scripts/esbuild.ts && yarn de-iffe",
+    "dist": "yarn build && cp appsscript.json dist/",
+    "de-iffe": "cat dist/index.js | head -n -1 > dist/tmp.js && echo '});' >> dist/tmp.js && mv dist/tmp.js dist/index.js"
   },
   "dependencies": {
     "@google/clasp": "^2.4.2",
@@ -20,8 +21,6 @@
     "ts-node": "^10.9.1",
     "tsc-loader": "^1.0.4",
     "typescript": "^4.8.2",
-    "typescript-language-server": "^1.1.2",
-    "webpack": "^5.74.0",
-    "webpack-cli": "^4.10.0"
+    "typescript-language-server": "^1.1.2"
   }
 }
