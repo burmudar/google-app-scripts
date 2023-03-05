@@ -6,8 +6,8 @@
     flake-utils = { url = "github:numtide/flake-utils"; };
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... } : {
-    flake-utils.lib.eachDefaultSystem { system:
+  outputs = { self, nixpkgs, flake-utils, ... } :
+    flake-utils.lib.eachDefaultSystem (system:
       let
         inherit system;
         pkgs = import nixpkgs { inherit system; };
@@ -18,11 +18,9 @@
             nodejs-18_x
             nodePackages.typescript
             nodePackages.typescript-language-server
-            nodePackages.clasp
+            nodePackages.pnpm
             esbuild
-            pnpm
           ];
-        }
-      }
-  };
+        };
+      });
 }

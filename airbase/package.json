@@ -2,9 +2,8 @@
   "name": "airbase-gscript",
   "private": true,
   "scripts": {
-    "build": "ts-node --transpile-only ./scripts/esbuild.ts && yarn de-iffe",
-    "dist": "yarn build && cp appsscript.json dist/",
-    "de-iffe": "cat dist/index.js | head -n -1 > dist/tmp.js && echo '});' >> dist/tmp.js && mv dist/tmp.js dist/index.js"
+    "build": "ts-node --transpile-only ./scripts/esbuild.ts",
+    "dist": "pnpm build && cp appsscript.json dist/"
   },
   "dependencies": {
     "@google/clasp": "^2.4.2",

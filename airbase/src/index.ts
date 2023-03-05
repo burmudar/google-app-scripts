@@ -36,22 +36,25 @@ export function main() {
     filter(t => !hasLabels(t.getLabels().map(l => l.getName()), ["processed"])),
     filter(t => hasLabels(t.getLabels().map(l => l.getName()), ["Finance/Airbase"])),
     filter(t => {
-      const matches = t.getFirstMessageSubject()).match('initiated\sthe\spayment\sfor\s');
-  return matches.length > 0;
-});
+      const matches = t.getFirstMessageSubject().match('initiated\\sthe\\spayment\\sfor\\s');
+      return matches.length > 0;
+    })
+  );
 
-mails.subscribe((thread: Thread) => {
-  thread.addLabel(processedLabel);
-  thread.markRead();
-  // Create an event 7 days (5 business) from now to mark the payday
-  const cal: Calendar = CalendarApp.getDefaultCalendar();
-  const eventDate = thread.getLastMessageDate();
-  const payDate = eventDate.getDate() + 7;
-  eventDate.setDate(payDate);
-  // cal.createAllDayEvent(
-  //   AIRBASE_PAYDAY_EVENT_TITLE,
-  //   payDate
-  // );
-  console.log(`payday event created: ${eventDate}`)
-});
+  mails.subscribe((thread: Thread) => {
+    const subject = thread.getFirstMessageSubject();
+    console.log(`processing airbase mail ${subject}`);
+    thread.addLabel(processedLabel);
+    thread.markRead();
+    // Create an event 7 days (5 business) from now to mark the payday
+    const cal: Calendar = CalendarApp.getDefaultCalendar();
+    const eventDate = thread.getLastMessageDate();
+    const payDate = eventDate.getDate() + 7;
+    eventDate.setDate(payDate);
+    cal.createAllDayEvent(
+      AIRBASE_PAYDAY_EVENT_TITLE,
+      eventDate
+    );
+    console.log(`payday event created: ${eventDate}`)
+  });
 }

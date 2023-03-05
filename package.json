@@ -2,8 +2,9 @@
   "name": "gscripts",
   "private": true,
   "scripts": {
-    "build-airbase": "cd airbase && yarn build",
-    "dist-airbase": "cd airbase && yarn dist && cd - && mkdir -p dist && cp airbase/dist/* dist/"
+    "build-airbase": "cd airbase && pnpm build",
+    "dist-airbase": "cd airbase && pnpm dist && cd - && mkdir -p dist && cp airbase/dist/* dist/",
+    "publish-airbase": "pnpm clasp push"
   },
   "dependencies": {
     "@google/clasp": "^2.4.2",

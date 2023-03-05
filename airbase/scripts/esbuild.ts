@@ -17,6 +17,8 @@ async function build(): Promise<void> {
     entryPoints: [path.resolve(__dirname, '..', 'src', 'global.ts')],
     globalName: "airbase",
     target: 'ES2018',
+    format: 'cjs',
+    platform: 'browser',
     bundle: true,
     plugins: [GasPlugin],
     outfile: "dist/index.js",
