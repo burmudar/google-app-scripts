@@ -4,27 +4,24 @@ type Message = GoogleAppsScript.Gmail.GmailMessage;
 type Label = GoogleAppsScript.Gmail.GmailLabel;
 type Calendar = GoogleAppsScript.Calendar.Calendar
 
-import { filter, Observable } from 'rxjs';
+import { filter, Observable, partition, Subscriber, share, map } from 'rxjs';
+import { withAll, withLabels, withOnlyUnprocessed, withSubject } from "filters";
+import { airbaseAction, therapyAction } from "actions";
+import { getOrCreateLabel } from "mail";
 
-const AIRBASE_PAYDAY_EVENT_TITLE = "Airbase payday!";
-
-function hasLabels(current: String[], labels: String[]): boolean {
-  return current.filter(l => {
-    return labels.findIndex(val => l === val) >= 0
-  }).length > 0
-}
-
-function getOrCreateLabel(labelName: string): Label {
-  let label: Label = GmailApp.getUserLabelByName(labelName);
-  if (!label) {
-    label = GmailApp.createLabel(labelName);
+function markProcessed(): (thread: Thread) => Thread {
+  const processedLabel = getOrCreateLabel("processed");
+  return (thread: Thread) => {
+    const subject = thread.getFirstMessageSubject();
+    thread.addLabel(processedLabel);
+    thread.markRead();
+    console.log(`processed ${subject}`);
+    return thread;
   }
-  return label;
 }
 
 export function main() {
-  const processedLabel = getOrCreateLabel("processed");
-  const mails = new Observable<Thread>((subscriber) => {
+  const mails = new Observable((subscriber: Subscriber<Thread>) => {
     const threads: Thread[] = GmailApp.getInboxThreads(0, 100);
 
     for (let t of threads) {
@@ -32,29 +29,19 @@ export function main() {
     }
     subscriber.complete();
   }).pipe(
-    filter(t => t.isUnread()),
-    filter(t => !hasLabels(t.getLabels().map(l => l.getName()), ["processed"])),
-    filter(t => hasLabels(t.getLabels().map(l => l.getName()), ["Finance/Airbase"])),
-    filter(t => {
-      const matches = t.getFirstMessageSubject().match('initiated\\sthe\\spayment\\sfor\\s');
-      return matches.length > 0;
-    })
+    filter(withOnlyUnprocessed),
+    share()
   );
 
-  mails.subscribe((thread: Thread) => {
-    const subject = thread.getFirstMessageSubject();
-    console.log(`processing airbase mail ${subject}`);
-    thread.addLabel(processedLabel);
-    thread.markRead();
-    // Create an event 7 days (5 business) from now to mark the payday
-    const cal: Calendar = CalendarApp.getDefaultCalendar();
-    const eventDate = thread.getLastMessageDate();
-    const payDate = eventDate.getDate() + 7;
-    eventDate.setDate(payDate);
-    cal.createAllDayEvent(
-      AIRBASE_PAYDAY_EVENT_TITLE,
-      eventDate
-    );
-    console.log(`payday event created: ${eventDate}`)
-  });
+  // TODO(burmudar): current thinking
+  // - primary observable which has subObservers thant create actions, which
+  //   will ultimately be merged into a single pipeline of actions
+  // - We create an observable from all the actions, and execute each action and then let subscribers know
+  // - This means Actions should remember the thread they're for
+  var [airbaseMails, other] = partition(mails, withAll<Thread>(withLabels("Finance/Airbase"), withSubject("initiated\\sthe\\spayment\\sfor\\s")));
+  var [therapyMails, other] = partition(other, withLabels("Therapy"));
+
+  airbaseMails = airbaseMails.pipe(map(airbaseAction()));
+  therapyMails = therapyMails.pipe(map(therapyAction()));
+  other.subscribe((thread: Thread) => console.log(`skipped ${thread.getFirstMessageSubject()}`));
 }
