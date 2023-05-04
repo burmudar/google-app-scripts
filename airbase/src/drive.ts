@@ -29,10 +29,22 @@ function resolveFolder(path: string): Folder | DriveApp {
   return folder;
 }
 
-function saveBlob(folder: Folder, attachment: Attachment, name: string) {
-  let blob: GBlob = attachment.copyBlob()
 
-  let file = folder.createFile(blob);
-  file.setName(name);
+export class Drive {
+  private readonly folder: Folder | DriveApp;
+
+  private constructor(folder: Folder | DriveApp) {
+    this.folder = folder
+  }
+
+  static folder(path: string): Drive {
+    return new Drive(resolveFolder(path));
+  }
+
+  saveBlob(attachment: Attachment, name: string) {
+    let blob: GBlob = attachment.copyBlob()
+
+    let file = this.folder.createFile(blob);
+    file.setName(name);
+  }
 }
-

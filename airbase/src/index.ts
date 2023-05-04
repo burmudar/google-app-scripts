@@ -4,9 +4,9 @@ type Message = GoogleAppsScript.Gmail.GmailMessage;
 type Label = GoogleAppsScript.Gmail.GmailLabel;
 type Calendar = GoogleAppsScript.Calendar.Calendar
 
-import { filter, Observable, partition, Subscriber, share, map } from 'rxjs';
+import { filter, Observable, partition, Subscriber, share, map, merge } from 'rxjs';
 import { withAll, withLabels, withOnlyUnprocessed, withSubject } from "filters";
-import { airbaseAction, therapyAction } from "actions";
+import { airbaseAction, therapyAction, ThreadAction } from "actions";
 import { getOrCreateLabel } from "mail";
 
 function markProcessed(): (thread: Thread) => Thread {
@@ -41,7 +41,7 @@ export function main() {
   var [airbaseMails, other] = partition(mails, withAll<Thread>(withLabels("Finance/Airbase"), withSubject("initiated\\sthe\\spayment\\sfor\\s")));
   var [therapyMails, other] = partition(other, withLabels("Therapy"));
 
-  airbaseMails = airbaseMails.pipe(map(airbaseAction()));
-  therapyMails = therapyMails.pipe(map(therapyAction()));
+  const all = merge(airbaseMails.pipe(map<Thread, ThreadAction>(airbaseAction)), therapyMails.pipe(map<Thread, ThreadAction>(therapyAction)));
+  all.pipe(concatMap(action => action()
   other.subscribe((thread: Thread) => console.log(`skipped ${thread.getFirstMessageSubject()}`));
 }
